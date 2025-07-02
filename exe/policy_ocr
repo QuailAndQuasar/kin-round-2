@@ -1,0 +1,36 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH.unshift(File.expand_path('../../lib', __FILE__))
+require 'policy_ocr'
+
+# Simple command-line interface for PolicyOcr
+if __FILE__ == $PROGRAM_NAME
+  if ARGV.include?('-h') || ARGV.include?('--help')
+    puts "Usage: #{File.basename($0)} [file_path]"
+    puts "  Parses the specified OCR policy file using PolicyOcr"
+    puts "  If no file is provided, uses the default sample file"
+    exit
+  end
+
+  begin
+    file_path = ARGV.first
+    parser = PolicyOcr::Parser.new(file_path)
+    
+    puts "Parsing file: #{parser.instance_variable_get(:@file_path)}"
+    puts "-" * 50
+    
+    entries = parser.parse
+    
+    # Output the parsed entries
+    entries.each_with_index do |entry, index|
+      puts "Entry #{index + 1}: #{entry}"
+    end
+    
+    puts "\nParsed #{entries.size} entries"
+    
+  rescue StandardError => e
+    $stderr.puts "Error: #{e.message}"
+    $stderr.puts e.backtrace.join("\n") if ENV['DEBUG']
+    exit 1
+  end
+end
