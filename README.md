@@ -78,3 +78,43 @@ Calculation: (5*1 + 6*2 + 8*3 + 2*4 + 8*5 + 8*6 + 5*7 + 4*8 + 3*9) % 11 = 0
 Output: true
 ```
 
+## User Story 3
+
+Write out a file of your findings, one for each input file, in this format:
+```
+457508000
+664371495 ERR
+86110??36 ILL
+123456789
+```
+
+### Output Format
+- One policy number per line
+- If the number contains '?', append ' ILL' (illegible)
+- If the checksum is invalid, append ' ERR'
+- Valid numbers are written as-is
+
+### Usage
+
+```ruby
+# Parse a file and write the results to an output file
+parser = PolicyOcr::Parser.new('path/to/input.txt')
+results = parser.parse
+PolicyOcr::ResultWriter.write(results, 'path/to/output.txt')
+```
+
+### Example Output
+For input containing:
+- 457508000 (valid)
+- 664371495 (invalid checksum)
+- 86110??36 (illegible)
+- 123456789 (valid)
+
+The output file will contain:
+```
+457508000
+664371495 ERR
+86110??36 ILL
+123456789
+```
+
