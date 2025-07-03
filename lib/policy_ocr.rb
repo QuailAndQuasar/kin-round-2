@@ -99,7 +99,6 @@ module PolicyOcr
   class Parser
     # Maps ASCII art patterns to their corresponding digits.
     # Each key is an array of 3 strings representing the 3 lines of a digit.
-    # This format is not what we want to output. It's just for internal use.
     DIGIT_MAP = {
       [" _ ",
        "| |",
