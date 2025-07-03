@@ -3,23 +3,23 @@ Round 2 for Kin programming challenge
 
 ## Installation
 
-Add this line to your application's Gemfile:
+1. Ensure you have bundler > 2.5.0 and Ruby > 2.6.0 installed on your system.
 
-```ruby
-gem 'kin-round-2'
-```
+2. Clone this repository:
+   ```bash
+   git clone https://github.com/your-username/kin-round-2.git
+   cd kin-round-2
+   ```
 
-And then execute:
+3. Install the required dependencies:
+   ```bash
+   bundle install
+   ```
 
-```bash
-bundle install
-```
-
-Or install it yourself as:
-
-```bash
-gem install kin-round-2
-```
+4. Run the tests to verify everything is working:
+   ```bash
+   bundle exec rspec
+   ```
 
 ## Usage
 
