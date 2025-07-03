@@ -1,4 +1,49 @@
 module PolicyOcr
+  # Validates policy numbers using a checksum algorithm
+  #
+  # The checksum is calculated as:
+  # (d1 + 2*d2 + 3*d3 + ... + 9*d9) mod 11 == 0
+  # where d1 is the rightmost digit and d9 is the leftmost digit
+  module Validator
+    # Validates if a policy number has a valid checksum
+    #
+    # @param number [String, Integer] The policy number to validate
+    # @return [Boolean] true if the checksum is valid, false otherwise
+    def self.valid_checksum?(number)
+      digits = number.to_s.chars.map(&:to_i)
+      return false unless digits.size == 9
+
+      sum = digits.each_with_index.sum do |digit, index|
+        (9 - index) * digit  # d9*1 + d8*2 + ... + d1*9
+      end
+
+      (sum % 11).zero?
+    end
+
+    # Calculates the checksum for a policy number
+    #
+    # @param number [String, Integer] The policy number
+    # @return [Integer] The checksum value (0-10)
+    def self.calculate_checksum(number)
+      # Convert the input to a string, split into individual characters, and map to integers
+      digits = number.to_s.chars.map(&:to_i)
+      
+      # Return nil if the number doesn't have exactly 9 digits
+      return nil unless digits.size == 9
+
+      # Calculate the weighted sum where:
+      # - First digit (leftmost) is multiplied by 9 (9-0)
+      # - Second digit is multiplied by 8 (9-1)
+      # - ...
+      # - Last digit (rightmost) is multiplied by 1 (9-8)
+      sum = digits.each_with_index.sum do |digit, index|
+        (9 - index) * digit  # d9*1 + d8*2 + ... + d1*9
+      end
+
+      # Return the checksum value (0-10)
+      sum % 11
+    end
+  end
   # A parser for OCR (Optical Character Recognition) of policy numbers from ASCII art.
   #
   # The parser reads a text file containing ASCII art representations of numbers,
@@ -15,6 +60,7 @@ module PolicyOcr
   class Parser
     # Maps ASCII art patterns to their corresponding digits.
     # Each key is an array of 3 strings representing the 3 lines of a digit.
+    # This format is not what we want to output. It's just for internal use.
     DIGIT_MAP = {
       [" _ ", "| |", "|_|"] => '0',
       ["   ", "  |", "  |"] => '1',
@@ -36,6 +82,11 @@ module PolicyOcr
       @file_path = file_path || 'spec/fixtures/sample.txt'
     end
 
+    # Parses the OCR file and returns an array of policy number hashes with validation status
+    #
+    # @return [Array<Hash>] An array of hashes with :number and :valid_checksum keys
+    # @raise [ArgumentError] If the file does not exist
+    # @raise [StandardError] If there are permission issues or the file is empty
     def parse
       raise ArgumentError, "File not found: #{@file_path}" unless File.exist?(@file_path)
 
@@ -44,7 +95,13 @@ module PolicyOcr
 
       lines.each_slice(4).map do |entry_lines|
         entry_lines = entry_lines.take(3) # Only take the first 3 lines in case of missing newline at EOF
-        entry_lines.size == 3 ? parse_ascii_digit_lines(entry_lines) : nil
+        next nil unless entry_lines.size == 3
+        
+        number = parse_ascii_digit_lines(entry_lines)
+        {
+          number: number,
+          valid_checksum: Validator.valid_checksum?(number)
+        }
       end.compact
     rescue Errno::EACCES => e
       raise StandardError, "Permission denied when reading file: #{@file_path}"

@@ -62,20 +62,28 @@ describe PolicyOcr do
     
     # Test parsing functionality
     describe 'parsing' do
-      it 'returns an array of strings' do
-        entries = parser.parse
-        expect(entries).to be_an(Array)
-        expect(entries).to all(be_a(String))
+      it 'returns an array of hashes with number and valid_checksum' do
+        result = parser.parse
+        expect(result).to be_an(Array)
+        expect(result).to all(include(:number, :valid_checksum))
+        expect(result.first).to include(
+          number: '000000000',
+          valid_checksum: true
+        )
       end
-      
+
       it 'handles files with missing trailing newline' do
         content = " _  _  _  _  _  _  _  _  _ \n| || || || || || || || || |\n|_||_||_||_||_||_||_||_||_|"
         temp_file = File.expand_path('fixtures/temp.txt', __dir__)
         File.write(temp_file, content)
         
         expect {
-          entries = PolicyOcr::Parser.new(temp_file).parse
-          expect(entries).to eq(['000000000'])
+          result = PolicyOcr::Parser.new(temp_file).parse
+          expect(result).to be_an(Array)
+          expect(result.first).to include(
+            number: '000000000',
+            valid_checksum: true
+          )
         }.to_not raise_error
         
         File.delete(temp_file) if File.exist?(temp_file)
