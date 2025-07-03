@@ -4,6 +4,7 @@ module PolicyOcr
   # The checksum is calculated as:
   # (d1 + 2*d2 + 3*d3 + ... + 9*d9) mod 11 == 0
   # where d1 is the rightmost digit and d9 is the leftmost digit
+  # Formats and validates policy numbers
   module Validator
     # Validates if a policy number has a valid checksum
     #
@@ -42,6 +43,44 @@ module PolicyOcr
 
       # Return the checksum value (0-10)
       sum % 11
+    end
+
+    # Determines the status of a policy number
+    # @param number [String] The policy number to check
+    # @return [Symbol] :ok, :ill (if contains '?'), or :err (if invalid checksum)
+    def self.status(number)
+      return :ill if number.include?('?')
+      valid_checksum?(number) ? :ok : :err
+    end
+
+    # Formats a policy number with its status
+    # @param number [String] The policy number to format
+    # @return [String] Formatted string with number and status (if not :ok)
+    def self.format_number(number)
+      status = status(number)
+      status == :ok ? number : "#{number} #{status.to_s.upcase}"
+    end
+  end
+
+  # Handles writing policy number results to files
+  class ResultWriter
+    # Writes policy number results to a file
+    # @param results [Array<Hash>] Array of hashes with :number and :valid_checksum
+    # @param output_path [String] Path to write the output file
+    def self.write(results, output_path)
+      File.open(output_path, 'w') do |file|
+        results.each do |result|
+          status = if result[:number].include?('?')
+                     'ILL'
+                   elsif !result[:valid_checksum]
+                     'ERR'
+                   end
+          
+          line = result[:number]
+          line += " #{status}" if status
+          file.puts(line)
+        end
+      end
     end
   end
   # A parser for OCR (Optical Character Recognition) of policy numbers from ASCII art.
